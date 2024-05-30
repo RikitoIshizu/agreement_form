@@ -1,15 +1,15 @@
 "use client";
 import {
-  Page,
-  Text,
-  View,
-  Document,
-  StyleSheet,
+  // Page,
+  // Text,
+  // View,
+  // Document,
+  // StyleSheet,
   Font,
 } from "@react-pdf/renderer";
 
 import Input from "./components/Input";
-import { PDFViewer } from "@react-pdf/renderer";
+// import { PDFViewer } from "@react-pdf/renderer";
 import { useState } from "react";
 
 Font.register({
@@ -25,61 +25,75 @@ Font.register({
   ],
 });
 
-const styles = StyleSheet.create({
-  page: {
-    fontFamily: "NotoSansJP",
-    padding: 30,
-    fontSize: 11,
-    textAlign: "center",
-    width: "100%",
-  },
-  title: {
-    fontSize: 18,
-  },
-  section: {
-    margin: 10,
-    padding: 10,
-    flexGrow: 1,
-  },
-});
+// const styles = StyleSheet.create({
+//   page: {
+//     fontFamily: "NotoSansJP",
+//     padding: 30,
+//     fontSize: 11,
+//     textAlign: "center",
+//     width: "100%",
+//   },
+//   title: {
+//     fontSize: 18,
+//   },
+//   section: {
+//     margin: 10,
+//     padding: 10,
+//     flexGrow: 1,
+//   },
+// });
 
 type InputText = {
   id: string;
   text: string;
 };
 
-function App() {
+type InputData = {
+  name: string;
+  descriptions: InputText[];
+  conditions: InputText[];
+  cautions: InputText[];
+  isDisplayPDF: boolean;
+};
+
+type ErrMsg = {
+  titleErrMsg: string;
+  descriptionsErrMsg: string;
+  conditionsErrMsg: string;
+};
+
+// リセット用のデフォルトデータ
+const defaultInputData: InputData = {
+  name: "",
+  descriptions: [{ id: "1", text: "" }],
+  conditions: [{ id: "1", text: "" }],
+  cautions: [{ id: "1", text: "" }],
+  isDisplayPDF: false,
+};
+
+const defaultErrMsg: ErrMsg = {
+  titleErrMsg: "",
+  descriptionsErrMsg: "",
+  conditionsErrMsg: "",
+};
+
+export default function App() {
   // 入力情報
-  const [name, changeName] = useState<string>("");
-  const [descriptions, editDescription] = useState<InputText[]>([
-    { id: "1", text: "" },
-  ]);
-  const [condition, editCondition] = useState<InputText[]>([
-    { id: "1", text: "" },
-  ]);
+  const [inputData, editInputData] = useState<InputData>(defaultInputData);
+  type Enums = keyof Pick<
+    InputData,
+    "descriptions" | "conditions" | "cautions"
+  >;
 
   // バリデーション用のエラーメッセージ
-  const [titleErrMsg, setNameErrMsg] = useState<string>("");
-  const [descriptionsErrMsg, setDescriptionErrMsg] = useState<string>("");
-  const [conditionsErrMsg, setConditionErrMsg] = useState<string>("");
-
-  // PDF表示フラグ
-  const [isDisplayPDF, toggleIsDisplayPDF] = useState<boolean>(false);
-
-  const edit = (isDescription: boolean, setData: InputText[]) => {
-    if (isDescription) {
-      editDescription(setData);
-    } else {
-      editCondition(setData);
-    }
-  };
+  const [errMsgs, editErrMsg] = useState<ErrMsg>(defaultErrMsg);
 
   const changeTextData = (
     id: InputText["id"],
     text: string,
-    isDescription: boolean
+    changeParam: Enums
   ) => {
-    const setParam = isDescription ? descriptions : condition;
+    const setParam = inputData[changeParam];
     const setData = setParam.map((el) =>
       el.id === id
         ? {
@@ -89,19 +103,17 @@ function App() {
         : el
     );
 
-    edit(isDescription, setData);
+    editInputData({ ...inputData, [changeParam]: setData });
   };
 
-  const addData = (isDescription: boolean) => {
-    const setParam = isDescription ? descriptions : condition;
+  const addData = (changeParam: Enums) => {
+    const setParam = inputData[changeParam];
     const setData = [...setParam, { id: `${setParam.length + 1}`, text: "" }];
-
-    edit(isDescription, setData);
+    editInputData({ ...inputData, [changeParam]: setData });
   };
 
-  const removeData = (id: InputText["id"], isDescription: boolean) => {
-    const setParam = isDescription ? descriptions : condition;
-
+  const removeData = (id: InputText["id"], changeParam: Enums) => {
+    const setParam = inputData[changeParam];
     const setData = setParam
       .filter((el) => el.id !== id)
       .map((el, index) => {
@@ -111,34 +123,31 @@ function App() {
         };
       });
 
-    edit(isDescription, setData);
+    editInputData({ ...inputData, [changeParam]: setData });
   };
 
   const onSubmit = (e: any) => {
     e.preventDefault();
+    const checkName = !!inputData.name;
+    const checkDescriptions = inputData.descriptions.some((el) => el.text);
+    const checkConditions = inputData.conditions.some((el) => el.text);
 
-    const checkName = !!name;
-    const checkDescriptions = descriptions.some((el) => el.text);
-    const checkConditions = condition.some((el) => el.text);
-
-    // バリデーション
-    setNameErrMsg(!checkName ? "同意書のタイトルを入力してください。" : "");
-    setDescriptionErrMsg(
-      !checkDescriptions ? "最低でも文章は1つ入力してください。" : ""
-    );
-    setConditionErrMsg(
-      !checkConditions ? "最低でも条件は1つ入力してください。" : ""
-    );
+    editErrMsg({
+      ...errMsgs,
+      titleErrMsg: !checkName ? "同意書のタイトルを入力してください。" : "",
+      descriptionsErrMsg: !checkDescriptions
+        ? "最低でも文章は1つ入力してください。"
+        : "",
+      conditionsErrMsg: !checkConditions
+        ? "最低でも条件は1つ入力してください。"
+        : "",
+    });
 
     // バリデーションが問題ないならPDFを表示
-    toggleIsDisplayPDF(checkName && checkDescriptions && checkConditions);
-  };
-
-  const onReset = () => {
-    toggleIsDisplayPDF(false);
-    changeName("");
-    editDescription([{ id: "1", text: "" }]);
-    editCondition([{ id: "1", text: "" }]);
+    editInputData({
+      ...inputData,
+      isDisplayPDF: checkName && checkDescriptions && checkConditions,
+    });
   };
 
   return (
@@ -164,33 +173,37 @@ function App() {
               <div className="mt-2 w-full">
                 <label htmlFor="title" className="mr-3 w-1/3">
                   貴方の名前
-                  {!!titleErrMsg ? (
+                  {!!errMsgs.titleErrMsg ? (
                     <span className="text-red-500 text-xs ml-2">
-                      {titleErrMsg}
+                      {errMsgs.titleErrMsg}
                     </span>
                   ) : null}
                 </label>
                 <Input
                   name="title"
-                  value={name}
-                  placeholder={!name ? "(貴方の名前を入力)" : undefined}
+                  value={inputData.name}
+                  placeholder={
+                    !inputData.name ? "(貴方の名前を入力)" : undefined
+                  }
                   className="block w-full"
-                  changeText={changeName}
+                  changeText={(e: string) =>
+                    editInputData({ ...inputData, name: e })
+                  }
                 />
               </div>
 
               <div className="mt-2">
                 <div>
                   説明文
-                  {!!descriptionsErrMsg ? (
+                  {!!errMsgs.descriptionsErrMsg ? (
                     <span className="text-red-500 text-xs ml-3">
-                      {descriptionsErrMsg}
+                      {errMsgs.descriptionsErrMsg}
                     </span>
                   ) : null}
                 </div>
-                {descriptions.length ? (
+                {inputData.descriptions.length ? (
                   <ul className="mt-4">
-                    {descriptions.map((el) => (
+                    {inputData.descriptions.map((el) => (
                       <li
                         key={el.id}
                         className="mb-1 last:mb-1 flex items-center"
@@ -206,13 +219,13 @@ function App() {
                           value={el.text}
                           className="block w-full"
                           changeText={(text: string) =>
-                            changeTextData(el.id, text, true)
+                            changeTextData(el.id, text, "descriptions")
                           }
                         />
                         {el.id !== "1" ? (
                           <button
                             type="button"
-                            onClick={() => removeData(el.id, true)}
+                            onClick={() => removeData(el.id, "descriptions")}
                             className="ml-2 w-8 h-8 bg-red-400 font-bold text-3xl rounded-full shadow-2xl text-white flex items-center justify-center"
                           >
                             <span>-</span>
@@ -227,7 +240,7 @@ function App() {
                 <div>
                   <button
                     type="button"
-                    onClick={() => addData(true)}
+                    onClick={() => addData("descriptions")}
                     className="ml-2 w-8 h-8 bg-blue-400 font-bold text-3xl rounded-full shadow-2xl text-white flex items-center justify-center"
                   >
                     <span>+</span>
@@ -236,7 +249,7 @@ function App() {
               </div>
               <div className="mt-2">
                 <ul>
-                  {condition.map((el) => (
+                  {inputData.conditions.map((el) => (
                     <li
                       key={el.id}
                       className="mb-1 last:mb-1 flex items-center"
@@ -251,13 +264,13 @@ function App() {
                         name={`condition-${el.id}`}
                         value={el.text}
                         changeText={(text: string) =>
-                          changeTextData(el.id, text, false)
+                          changeTextData(el.id, text, "conditions")
                         }
                       />
                       {el.id !== "1" ? (
                         <button
                           type="button"
-                          onClick={() => removeData(el.id, false)}
+                          onClick={() => removeData(el.id, "conditions")}
                           className="ml-2 w-8 h-8 bg-red-400 font-bold text-3xl rounded-full shadow-2xl text-white flex items-center justify-center"
                         >
                           <span>-</span>
@@ -266,13 +279,15 @@ function App() {
                     </li>
                   ))}
                 </ul>
-                {!!conditionsErrMsg ? (
-                  <div className="text-red-500 text-xs">{conditionsErrMsg}</div>
+                {!!errMsgs.conditionsErrMsg ? (
+                  <div className="text-red-500 text-xs">
+                    {errMsgs.conditionsErrMsg}
+                  </div>
                 ) : null}
                 <div>
                   <button
                     type="button"
-                    onClick={() => addData(false)}
+                    onClick={() => addData("conditions")}
                     className="ml-2 w-8 h-8 bg-blue-400 font-bold text-3xl rounded-full shadow-2xl text-white flex items-center justify-center"
                   >
                     <span>+</span>
@@ -285,11 +300,11 @@ function App() {
                   value="同意書を作成"
                   className="border border-2 border-slate-500 rounded py-2 px-3 bg-orange-300 border-orange-600 cursor-pointer"
                 />
-                {isDisplayPDF ? (
+                {inputData.isDisplayPDF ? (
                   <button
                     type="button"
                     className="ml-3 border border-2 border-slate-500 rounded py-2 px-3 bg-slate-500 border-slate-800 text-white"
-                    onClick={onReset}
+                    onClick={() => editInputData(defaultInputData)}
                   >
                     同意書を作り直す
                   </button>
@@ -305,29 +320,32 @@ function App() {
           </p>
           <div className="py-2 px-3 mt-2 bg-white min-h-96 rounded">
             <div className="text-center mt-4 text-xl font-bold">
-              {name ? name : "(名前)"}を飲食の場に誘うことに関する同意書
+              {inputData.name ? inputData.name : "(名前)"}
+              を飲食の場に誘うことに関する同意書
             </div>
             <p>
               私、
               <span className="underline">
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               </span>
-              (以下、甲)は、{name ? name : "(名前)"}
+              (以下、甲)は、{inputData.name ? inputData.name : "(名前)"}
               (以下、乙)を飲食の場に誘うことに対して、下記の全ての項目に同意いたします。
             </p>
-            {descriptions.length === 1 && !descriptions[0].text ? (
+            {inputData.descriptions.length === 1 &&
+            !inputData.descriptions[0].text ? (
               <p>(同意書の文書)</p>
             ) : (
-              descriptions.map((el) => {
+              inputData.descriptions.map((el) => {
                 return <p key={`desc-prev-${el.id}`}>{el.text}</p>;
               })
             )}
             <div className="text-center text-lg font-bold">記</div>
-            {condition.length === 1 && !condition[0].text ? (
+            {inputData.conditions.length === 1 &&
+            !inputData.conditions[0].text ? (
               <p>(同意してもらうことの文書)</p>
             ) : (
               <ul>
-                {condition.map((el) => {
+                {inputData.conditions.map((el) => {
                   return (
                     <li key={`condition-prev-${el.id}`}>
                       {el.id}.{el.text}
@@ -350,7 +368,7 @@ function App() {
           </div>
         </div>
       </div>
-      {isDisplayPDF ? (
+      {/* {isDisplayPDF ? (
         <PDFViewer width="100%" height="100%" className="h-[600px] px-32">
           <Document
             title="石津勲人を飲食の場に誘うことに関する同意書"
@@ -358,7 +376,7 @@ function App() {
           >
             <Page size="A4" style={styles.page}>
               <View style={styles.section}>
-                <Text>{name}を飲食の場に誘うことに関する同意書</Text>
+                <Text>{inputData.name}を飲食の場に誘うことに関する同意書</Text>
               </View>
               <View style={styles.section}>
                 <Text>Sectiあksじゃk</Text>
@@ -366,9 +384,7 @@ function App() {
             </Page>
           </Document>
         </PDFViewer>
-      ) : null}
+      ) : null} */}
     </main>
   );
 }
-
-export default App;

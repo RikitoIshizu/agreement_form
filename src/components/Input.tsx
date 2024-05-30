@@ -7,10 +7,6 @@ type Props = {
 };
 
 export default function Input(props: Props) {
-  const onChangeText = (e: string) => {
-    props.changeText(e);
-  };
-
   return (
     <input
       type="text"
@@ -20,7 +16,7 @@ export default function Input(props: Props) {
       className={`border border-2 border-slate-500 rounded h-[50px] px-2${
         props.className ? ` ${props.className}` : ""
       }`}
-      onChange={(e) => onChangeText(e.target.value)}
+      onChange={(e) => props.changeText(e.target.value)}
     />
   );
 }
