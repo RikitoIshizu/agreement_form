@@ -1,15 +1,15 @@
 "use client";
 import {
-  // Page,
-  // Text,
-  // View,
-  // Document,
-  // StyleSheet,
+  Page,
+  Text,
+  View,
+  Document,
+  StyleSheet,
   Font,
 } from "@react-pdf/renderer";
 
 import Input from "./components/Input";
-// import { PDFViewer } from "@react-pdf/renderer";
+import { PDFViewer } from "@react-pdf/renderer";
 import { useState } from "react";
 
 Font.register({
@@ -25,23 +25,41 @@ Font.register({
   ],
 });
 
-// const styles = StyleSheet.create({
-//   page: {
-//     fontFamily: "NotoSansJP",
-//     padding: 30,
-//     fontSize: 11,
-//     textAlign: "center",
-//     width: "100%",
-//   },
-//   title: {
-//     fontSize: 18,
-//   },
-//   section: {
-//     margin: 10,
-//     padding: 10,
-//     flexGrow: 1,
-//   },
-// });
+const styles = StyleSheet.create({
+  page: {
+    fontFamily: "NotoSansJP",
+    padding: 10,
+    textAlign: "left",
+    width: "100%",
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  section: {
+    fontSize: 12,
+    margin: 10,
+    padding: 10,
+  },
+  description: {
+    fontSize: 10,
+  },
+  ki: {
+    textAlign: "center",
+    fontSize: 18,
+    marginVertical: 10,
+  },
+  list: {
+    marginBottom: 5,
+  },
+  under: {
+    marginTop: 10,
+    textAlign: "right",
+    textDecoration: "underline",
+  },
+});
 
 type InputText = {
   id: string;
@@ -76,6 +94,19 @@ const defaultErrMsg: ErrMsg = {
   descriptionsErrMsg: "",
   conditionsErrMsg: "",
 };
+
+const makeSpaceText = (num: number) =>
+  [...Array(num)].map((_) => "&nbsp;").reduce((a, b) => a + b);
+
+const ymdSpace = makeSpaceText(13);
+const nameSpace = makeSpaceText(40);
+const addressSpace = makeSpaceText(80);
+
+const personalWriteList = [
+  `${ymdSpace}年${ymdSpace}月${ymdSpace}日`,
+  `氏名: ${nameSpace}印`,
+  `住所: ${addressSpace}`,
+];
 
 export default function App() {
   // 入力情報
@@ -149,6 +180,13 @@ export default function App() {
       isDisplayPDF: checkName && checkDescriptions && checkConditions,
     });
   };
+
+  const titleText =
+    (inputData.name ? inputData.name : "(名前)") +
+    "を飲食の場に誘うことに関する同意書";
+  const fisrtDescription = `私、________________(以下、甲)は、${
+    inputData.name ? inputData.name : "(名前)"
+  }(以下、乙)を飲食の場に誘うことに対して、下記の全ての項目に同意いたします。`;
 
   return (
     <main>
@@ -320,17 +358,9 @@ export default function App() {
           </p>
           <div className="py-2 px-3 mt-2 bg-white min-h-96 rounded">
             <div className="text-center mt-4 text-xl font-bold">
-              {inputData.name ? inputData.name : "(名前)"}
-              を飲食の場に誘うことに関する同意書
+              {titleText}
             </div>
-            <p>
-              私、
-              <span className="underline">
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-              </span>
-              (以下、甲)は、{inputData.name ? inputData.name : "(名前)"}
-              (以下、乙)を飲食の場に誘うことに対して、下記の全ての項目に同意いたします。
-            </p>
+            <p>{fisrtDescription}</p>
             {inputData.descriptions.length === 1 &&
             !inputData.descriptions[0].text ? (
               <p>(同意書の文書)</p>
@@ -354,37 +384,54 @@ export default function App() {
                 })}
               </ul>
             )}
-            <div className="text-right underline mt-4">
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;年&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;月&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;日
-            </div>
-            <div className="text-right underline mt-4">
-              氏名
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;印
-            </div>
-            <div className="text-right underline mt-4">
-              住所:
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            </div>
+            {personalWriteList.map((__html) => (
+              <div
+                className="text-right underline mt-4"
+                dangerouslySetInnerHTML={{
+                  __html,
+                }}
+              />
+            ))}
           </div>
         </div>
       </div>
-      {/* {isDisplayPDF ? (
-        <PDFViewer width="100%" height="100%" className="h-[600px] px-32">
-          <Document
-            title="石津勲人を飲食の場に誘うことに関する同意書"
-            language="Japanese"
-          >
-            <Page size="A4" style={styles.page}>
-              <View style={styles.section}>
-                <Text>{inputData.name}を飲食の場に誘うことに関する同意書</Text>
-              </View>
-              <View style={styles.section}>
-                <Text>Sectiあksじゃk</Text>
-              </View>
-            </Page>
-          </Document>
-        </PDFViewer>
-      ) : null} */}
+      {inputData.isDisplayPDF ? (
+        <>
+          <div className="text-center font-bold text-3xl">
+            さあ、この同意書を使って飲み会を強引に誘ってくるやつに突きつけてやろうッ！
+          </div>
+          <PDFViewer width="100%" height="100%" className="h-[600px] px-32">
+            <Document title={titleText} language="Japanese">
+              <Page size="A4" style={styles.page}>
+                <View style={styles.section}>
+                  <Text style={styles.title}>{titleText}</Text>
+                  <Text style={styles.description}>{fisrtDescription}</Text>
+                  {inputData.descriptions.map((el) => {
+                    return <Text key={`desc-prev-${el.id}`}>{el.text}</Text>;
+                  })}
+                  <Text style={styles.ki}>記</Text>
+                  {inputData.conditions.map((el) => {
+                    return (
+                      <Text key={`cond-prev-${el.id}`}>
+                        {el.id}.{el.text}
+                      </Text>
+                    );
+                  })}
+                  <Text style={styles.under}>
+                    　　　　　　年　　　　　　月　　　　　　日
+                  </Text>
+                  <Text style={styles.under}>
+                    氏名:　　　　　　　　　　　　　　　　　　印
+                  </Text>
+                  <Text style={styles.under}>
+                    住所:　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+                  </Text>
+                </View>
+              </Page>
+            </Document>
+          </PDFViewer>
+        </>
+      ) : null}
     </main>
   );
 }
