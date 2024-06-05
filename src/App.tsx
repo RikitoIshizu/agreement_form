@@ -9,8 +9,15 @@ import {
 } from "@react-pdf/renderer";
 
 import Input from "./components/Input";
+import CircleButton from "./components/CircleButton";
 import { PDFViewer } from "@react-pdf/renderer";
 import { useState } from "react";
+import {
+  InputText,
+  InputData,
+  ErrMsg,
+  InputDataEnums,
+} from "./components/type";
 
 Font.register({
   family: "NotoSansJP",
@@ -61,25 +68,6 @@ const styles = StyleSheet.create({
   },
 });
 
-type InputText = {
-  id: string;
-  text: string;
-};
-
-type InputData = {
-  name: string;
-  descriptions: InputText[];
-  conditions: InputText[];
-  cautions: InputText[];
-  isDisplayPDF: boolean;
-};
-
-type ErrMsg = {
-  titleErrMsg: string;
-  descriptionsErrMsg: string;
-  conditionsErrMsg: string;
-};
-
 // リセット用のデフォルトデータ
 const defaultInputData: InputData = {
   name: "",
@@ -108,13 +96,9 @@ const personalWriteList = [
   `住所: ${addressSpace}`,
 ];
 
-export default function App() {
+export default function App(): JSX.Element {
   // 入力情報
   const [inputData, editInputData] = useState<InputData>(defaultInputData);
-  type Enums = keyof Pick<
-    InputData,
-    "descriptions" | "conditions" | "cautions"
-  >;
 
   // バリデーション用のエラーメッセージ
   const [errMsgs, editErrMsg] = useState<ErrMsg>(defaultErrMsg);
@@ -122,7 +106,7 @@ export default function App() {
   const changeTextData = (
     id: InputText["id"],
     text: string,
-    changeParam: Enums
+    changeParam: InputDataEnums
   ) => {
     const setParam = inputData[changeParam];
     const setData = setParam.map((el) =>
@@ -137,13 +121,13 @@ export default function App() {
     editInputData({ ...inputData, [changeParam]: setData });
   };
 
-  const addData = (changeParam: Enums) => {
+  const addData = (changeParam: InputDataEnums) => {
     const setParam = inputData[changeParam];
     const setData = [...setParam, { id: `${setParam.length + 1}`, text: "" }];
     editInputData({ ...inputData, [changeParam]: setData });
   };
 
-  const removeData = (id: InputText["id"], changeParam: Enums) => {
+  const removeData = (id: InputText["id"], changeParam: InputDataEnums) => {
     const setParam = inputData[changeParam];
     const setData = setParam
       .filter((el) => el.id !== id)
@@ -261,13 +245,14 @@ export default function App() {
                           }
                         />
                         {el.id !== "1" ? (
-                          <button
-                            type="button"
-                            onClick={() => removeData(el.id, "descriptions")}
-                            className="ml-2 w-8 h-8 bg-red-400 font-bold text-3xl rounded-full shadow-2xl text-white flex items-center justify-center"
-                          >
-                            <span>-</span>
-                          </button>
+                          <CircleButton
+                            id={el.id}
+                            isAdd={false}
+                            onClickEvent={() =>
+                              removeData(el.id, "descriptions")
+                            }
+                            editParamsName="descriptions"
+                          />
                         ) : (
                           <span className="ml-2 w-8" />
                         )}
@@ -276,13 +261,11 @@ export default function App() {
                   </ul>
                 ) : null}
                 <div>
-                  <button
-                    type="button"
-                    onClick={() => addData("descriptions")}
-                    className="ml-2 w-8 h-8 bg-blue-400 font-bold text-3xl rounded-full shadow-2xl text-white flex items-center justify-center"
-                  >
-                    <span>+</span>
-                  </button>
+                  <CircleButton
+                    isAdd
+                    onClickEvent={() => addData("descriptions")}
+                    editParamsName="descriptions"
+                  />
                 </div>
               </div>
               <div className="mt-2">
@@ -306,13 +289,12 @@ export default function App() {
                         }
                       />
                       {el.id !== "1" ? (
-                        <button
-                          type="button"
-                          onClick={() => removeData(el.id, "conditions")}
-                          className="ml-2 w-8 h-8 bg-red-400 font-bold text-3xl rounded-full shadow-2xl text-white flex items-center justify-center"
-                        >
-                          <span>-</span>
-                        </button>
+                        <CircleButton
+                          id={el.id}
+                          isAdd={false}
+                          onClickEvent={() => removeData(el.id, "conditions")}
+                          editParamsName="descriptions"
+                        />
                       ) : null}
                     </li>
                   ))}
@@ -323,13 +305,11 @@ export default function App() {
                   </div>
                 ) : null}
                 <div>
-                  <button
-                    type="button"
-                    onClick={() => addData("conditions")}
-                    className="ml-2 w-8 h-8 bg-blue-400 font-bold text-3xl rounded-full shadow-2xl text-white flex items-center justify-center"
-                  >
-                    <span>+</span>
-                  </button>
+                  <CircleButton
+                    isAdd
+                    onClickEvent={() => addData("conditions")}
+                    editParamsName="conditions"
+                  />
                 </div>
               </div>
               <div className="text-center">
