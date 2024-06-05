@@ -207,6 +207,7 @@ export default function App(): JSX.Element {
                   placeholder={
                     !inputData.name ? "(貴方の名前を入力)" : undefined
                   }
+                  disabled={inputData.isDisplayPDF}
                   className="block w-full"
                   changeText={(e: string) =>
                     editInputData({ ...inputData, name: e })
@@ -240,6 +241,7 @@ export default function App(): JSX.Element {
                           name={`description-${el.id}`}
                           value={el.text}
                           className="block w-full"
+                          disabled={inputData.isDisplayPDF}
                           changeText={(text: string) =>
                             changeTextData(el.id, text, "descriptions")
                           }
@@ -284,6 +286,7 @@ export default function App(): JSX.Element {
                       <Input
                         name={`condition-${el.id}`}
                         value={el.text}
+                        disabled={inputData.isDisplayPDF}
                         changeText={(text: string) =>
                           changeTextData(el.id, text, "conditions")
                         }
